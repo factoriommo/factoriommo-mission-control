@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block main %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <h2>Factorio - Mission Control</h2>
+    </div>
+  </div>
+</div>
+
+{% endblock main %}
+
+{% block js_init %}
+/* TODO: Remove window.factoriomc = */
+window.factoriomc = FactorioMC.init('/');
+{% endblock js_init %}

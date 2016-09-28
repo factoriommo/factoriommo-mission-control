@@ -9,3 +9,5 @@ hiredis==0.2.0
 redis==2.10.5
 
 psycopg2==2.6.1
+channels==0.17.2
+asgi-redis==0.14.1

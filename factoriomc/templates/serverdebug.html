@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block main %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <h2>Factorio - Server Debug</h2>
+    </div>
+  </div>
+</div>
+
+{% endblock main %}
+
+
+{% block js_init %}
+window.factoriomc = FactorioMC.init('/server/1/');
+{% endblock js_init %}
