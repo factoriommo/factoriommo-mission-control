@@ -40,6 +40,7 @@ class Event(models.Model):
 
     server = models.ForeignKey(Server)
     time = models.DateTimeField(auto_now_add=True)
+    event = models.CharField(max_length=255, choices=EVENT_CHOICES)
     data = models.TextField()
 
 
