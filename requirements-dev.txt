@@ -1,0 +1,5 @@
+-r requirements.txt
+Werkzeug==0.11.3
+django-extensions==1.6.1
+django-debug-toolbar==1.4
+ipython==4.1.1
