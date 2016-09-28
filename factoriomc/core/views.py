@@ -1,6 +1,7 @@
+from core.models import Event, Server
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from django.views.generic import TemplateView
+from django.views.generic import DetailView, TemplateView
 
 
 class IndexView(TemplateView):
@@ -11,9 +12,16 @@ class IndexView(TemplateView):
         return super().dispatch(*args, **kwargs)
 
 
-class ServerDebugView(TemplateView):
+class ServerDebugView(DetailView):
     template_name = 'serverdebug.html'
+    model = Server
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['events'] = Event.EVENT_CHOICES
+        return context
+

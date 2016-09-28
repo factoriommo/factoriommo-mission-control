@@ -22,7 +22,7 @@ from core.views import IndexView, ServerDebugView
 
 urlpatterns = [
     url(r'^$', IndexView.as_view(), name='index'),
-    url(r'^serverdebug$', ServerDebugView.as_view(), name='serverdebug'),
+    url(r'^serverdebug/(?P<pk>[0-9]+)/$', ServerDebugView.as_view(), name='serverdebug'),
     url(r'^admin/', include(admin.site.urls)),
 ]
 

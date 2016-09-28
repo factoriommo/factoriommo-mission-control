@@ -3,16 +3,68 @@
 
 {% block main %}
 <div class="container-fluid">
-  <div class="row">
-    <div class="col-md-12">
-      <h2>Factorio - Server Debug</h2>
+    <div class="row">
+        <div class="col-md-12">
+            <span id="connectionindicator">CONN_ERR</span>
+            <span id="queue_status"></span>
+            <h2>Factorio - Server Debugger</h2>
+            <p>Connected as server: {{ object.id }}</p>
+            <button data-pack="{{ server.auth_token }}" class="btn btn-default">Authenticate</button>
+            <hr>
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label for="productionType" class="col-sm-2 control-label">Type </label>
+                    <div class="col-sm-10">
+                        <select class="form-control" id="productionType" class="col-sm-10">
+                            <option value="iron-plates">Iron Plates</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="productionAmount" class="col-sm-2 control-label">Amount</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="productionAmount" placeholder="100">
+                    </div>
+                </div>
+                <button data-pack="{{ server.auth_token }}" class="btn btn-default">Send Production value</button>
+            </form>
+            <hr>
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label for="productionType" class="col-sm-2 control-label">Type </label>
+                    <div class="col-sm-10">
+                        <select class="form-control" id="productionType" class="col-sm-10">
+                            {% for event in events %}
+                            <option value="{{ event.0 }}">{{ event.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="productionAmount" class="col-sm-2 control-label">Data</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="productionAmount" placeholder='{"playername": "Sabbie"}'>
+                    </div>
+                </div>
+                <button data-pack="{{ server.auth_token }}" class="btn btn-default">Send Event</button>
+            </form>
+        </div>
     </div>
-  </div>
 </div>
-
 {% endblock main %}
 
 
 {% block js_init %}
-window.factoriomc = FactorioMC.init('/server/1/');
+window.factoriomc = FactorioMC.init('/server/{{ object.id }}/');
 {% endblock js_init %}
+
+
+{% block script %}
+<script>
+$('button').click(function(elem) {
+    console.log('click');
+    console.log(elem);
+    event.preventDefault();
+});
+</script>
+{% endblock %}

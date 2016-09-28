@@ -61,4 +61,6 @@ LOGGING = {
     }
 """
 
+if DEBUG:
+    INSTALLED_APPS += ('django_extensions',)
 # vim: set ft=python :#

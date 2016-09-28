@@ -29,6 +29,7 @@ INSTALLED_APPS = (
     'channels',
 
     'account',
+    'core',
 )
 
 MIDDLEWARE_CLASSES = (
