@@ -1,4 +1,4 @@
-from factorio_mc.settings.defaults import *  # NOQA
+from factoriomc.settings.defaults import *  # NOQA
 
 DEBUG = False
 ALLOWED_HOSTS = []
@@ -11,7 +11,7 @@ SECRET_KEY = ""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'factorio_mc_0'
+        'NAME': 'factoriomc_0'
     }
 }
 
