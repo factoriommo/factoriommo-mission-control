@@ -66,10 +66,9 @@ FactorioMC.WebSocket = {
       }
     }
   },
-  send: function(namespace, command, data) {
+  send: function(namespace, data) {
     var payload = {
       "namespace": namespace,
-      "command": command,
       "data": data
     };
     if (!this.connected) {

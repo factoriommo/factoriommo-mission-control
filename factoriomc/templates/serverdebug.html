@@ -9,13 +9,13 @@
             <span id="queue_status"></span>
             <h2>Factorio - Server Debugger</h2>
             <p>Connected as server: {{ object.id }}</p>
-            <button data-pack="{{ server.auth_token }}" class="btn btn-default">Authenticate</button>
+            <button data-namespace="auth" data-pack='{"token": "{{ server.auth_token }}"}' class="btn btn-default">Authenticate</button>
             <hr>
             <form class="form-horizontal">
                 <div class="form-group">
                     <label for="productionType" class="col-sm-2 control-label">Type </label>
                     <div class="col-sm-10">
-                        <select class="form-control" id="productionType" class="col-sm-10">
+                        <select class="form-control updatebutton" data-update="sendProduction" id="productionType" class="col-sm-10">
                             <option value="iron-plates">Iron Plates</option>
                         </select>
                     </div>
@@ -23,17 +23,22 @@
                 <div class="form-group">
                     <label for="productionAmount" class="col-sm-2 control-label">Amount</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" id="productionAmount" placeholder="100">
+                        <input type="text" class="form-control updatebutton" data-update="sendProduction"id="productionAmount" placeholder="100">
                     </div>
                 </div>
-                <button data-pack="{{ server.auth_token }}" class="btn btn-default">Send Production value</button>
+                 <div class="form-group">
+                    <span id="sendProductionExample" class="well col-sm-offset-2 col-sm-8"></span>
+                    <div class="col-sm-2">
+                        <button data-namespace="production" data-pack="" class="btn btn-default" id="sendProduction">Send Production value</button>
+                    </div>
+                 </div>
             </form>
             <hr>
             <form class="form-horizontal">
                 <div class="form-group">
                     <label for="productionType" class="col-sm-2 control-label">Type </label>
                     <div class="col-sm-10">
-                        <select class="form-control" id="productionType" class="col-sm-10">
+                        <select id="eventType" class="form-control updatebutton" data-update="sendEvent" class="col-sm-10">
                             {% for event in events %}
                             <option value="{{ event.0 }}">{{ event.1 }}</option>
                             {% endfor %}
@@ -41,12 +46,17 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="productionAmount" class="col-sm-2 control-label">Data</label>
+                    <label for="eventData" class="col-sm-2 control-label">Data</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" id="productionAmount" placeholder='{"playername": "Sabbie"}'>
+                        <input id="eventData" type="text" class="form-control updatebutton" data-update="sendEvent" placeholder='{"playername": "Sabbie"}'>
                     </div>
                 </div>
-                <button data-pack="{{ server.auth_token }}" class="btn btn-default">Send Event</button>
+                 <div class="form-group">
+                    <span id="sendEventExample" class="well col-sm-offset-2 col-sm-8"></span>
+                    <div class="col-sm-2">
+                        <button data-namespace="event" data-pack="" class="btn btn-default" id="sendEvent">Send Event</button>
+                    </div>
+                 </div>
             </form>
         </div>
     </div>
@@ -55,16 +65,29 @@
 
 
 {% block js_init %}
-window.factoriomc = FactorioMC.init('/server/{{ object.id }}/');
+var factoriomc = FactorioMC.init('/server_callback/{{ object.id }}/');
 {% endblock js_init %}
 
 
 {% block script %}
 <script>
 $('button').click(function(elem) {
-    console.log('click');
-    console.log(elem);
+    var elem = $(elem.target);
+    FactorioMC.WebSocket.send(elem.data('namespace'), elem.data('pack'));
     event.preventDefault();
+});
+
+$('.updatebutton').change(function(elem) {
+    var elem = $(elem.target);
+    var pack = "";
+    if (elem.data('update') == 'sendProduction') {
+        pack = '{"type": "'+ $('#productionType').val() +'", "data": "'+ $('#productionAmount').val() +'"}';
+    } else if (elem.data('update') == 'sendEvent') {
+        pack = '{"type": "'+ $('#eventType').val() +'", "data": "'+ $('#eventData').val() +'"}';
+    }
+    $('#'+elem.data('update')+'Example').text(pack);
+    $('#'+elem.data('update')).data('pack', pack);
+    m(m.DEBUG, "Constructed pack: " + pack);
 });
 </script>
 {% endblock %}

@@ -24,4 +24,3 @@ class ServerDebugView(DetailView):
         context = super().get_context_data(*args, **kwargs)
         context['events'] = Event.EVENT_CHOICES
         return context
-

@@ -1,16 +1,17 @@
-from channels.auth import channel_session_user, channel_session_user_from_http
+import json
+
 from channels import Group
+from channels.auth import channel_session_user, channel_session_user_from_http
 from channels.sessions import channel_session
 
-@channel_session_user_from_http
+
 def server_connected(message, pk=None):
-	pass
+    print(message)
 
-@channel_session_user
 def server_message(message, pk=None):
-    pass
+    msg = json.loads(message.content['text'])
+    print(msg)
 
-@channel_session_user
 def server_disconnected(message, pk=None):
+    print(message)
     # Group("broadcast-%s-%s" % (endpoint, pk)).discard(message.reply_channel)
-    pass

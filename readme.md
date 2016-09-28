@@ -1,5 +1,4 @@
- Factorio_Mc
-========================
+ # Factorio_Mc
 
 Getting started:
 ```
@@ -14,3 +13,5 @@ cd ../..
 ./manage.py createsuperuser
 ./manage.py runserver
 ```
+
+[API](websocket_api.md)
