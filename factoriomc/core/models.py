@@ -12,6 +12,9 @@ class Server(models.Model):
     player_limit = models.IntegerField(blank=True, null=True)
     auth_token = models.CharField(max_length=40, blank=True, null=True)
 
+    def __str__(self):
+        return self.name
+
     def message(self, message):
         pass
 
@@ -66,8 +69,10 @@ class BaseStat(models.Model):
         abstract = True
 
 
-class ProductionStat(BaseStat):
-    pass
+class ProductionAmountStat(BaseStat):
+    def __str__(self):
+        return "[{:s}] <{:s}> {:s}: {:d}".format(self.time.strftime('%d/%m %H:%M:%S'),
+                                                 self.server.name, self.key, self.value)
 
 
 class ConsumptionStat(BaseStat):
