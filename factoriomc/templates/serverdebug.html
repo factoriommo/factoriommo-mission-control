@@ -81,13 +81,13 @@ $('.updatebutton').change(function(elem) {
     var elem = $(elem.target);
     var pack = "";
     if (elem.data('update') == 'sendProduction') {
-        pack = '{"type": "'+ $('#productionType').val() +'", "data": "'+ $('#productionAmount').val() +'"}';
+        pack = {"type": $('#productionType').val(), "data": $('#productionAmount').val()};
     } else if (elem.data('update') == 'sendEvent') {
-        pack = '{"type": "'+ $('#eventType').val() +'", "data": "'+ $('#eventData').val() +'"}';
+        pack = {"type": $('#eventType').val(), "data": $('#eventData').val()};
     }
-    $('#'+elem.data('update')+'Example').text(pack);
+    $('#'+elem.data('update')+'Example').text(JSON.stringify(pack));
     $('#'+elem.data('update')).data('pack', pack);
-    m(m.DEBUG, "Constructed pack: " + pack);
+    m(m.DEBUG, "Constructed pack: " + JSON.stringify(pack));
 });
 </script>
 {% endblock %}
