@@ -4,7 +4,7 @@ from channels import Group
 from channels.auth import channel_session_user, channel_session_user_from_http
 from channels.handler import AsgiHandler
 from channels.sessions import channel_session
-from core.models import ProductionAmountStat, Server
+from core.models import ConsumptionStat, Event, ProductionStat, Server
 from django.http import HttpResponse
 
 PACK_AUTH_OK = {  # Auth succeeds
@@ -102,7 +102,7 @@ def server_message(message, pk=None):
                 return
 
         try:
-            ProductionAmountStat.objects.create(
+            ProductionStat.objects.create(
                 server = server,
                 key = msg['type'],
                 value = msg['data']
@@ -113,6 +113,37 @@ def server_message(message, pk=None):
             raise
         return
 
+    if namespace == 'consumption':
+        try:
+            if int(msg['data']) <= 0:
+                raise ValueError
+        except ValueError:
+                message.reply_channel.send(fail_pack(namespace, "Data has to be an int bigger than 0"))
+                return
+
+        try:
+            ConsumptionStat.objects.create(
+                server = server,
+                key = msg['type'],
+                value = msg['data']
+            )
+            message.reply_channel.send(ok_pack(namespace))
+        except:
+            message.reply_channel.send(fail_pack(namespace, "Unknown error occured"))
+            raise
+        return
+
+    if namespace == 'event':
+        try:
+            Event.objects.create(
+                server = server,
+                event = msg['type'],
+                data = json.dumps(msg['data'])
+            )
+            message.reply_channel.send(ok_pack(namespace))
+        except json.decoder.JSONDecodeError:
+            message.reply_channel.send(fail_pack(namespace, "Please send JSON data as data"))
+        return
 
     print ("Unknown msg: ", namespace, msg)
 

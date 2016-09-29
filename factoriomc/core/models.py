@@ -58,6 +58,10 @@ class Event(models.Model):
     event = models.CharField(max_length=255, choices=EVENT_CHOICES)
     data = models.TextField()
 
+    def __str__(self):
+        return "[{:s}] <{:s}> {:s}".format(self.time.strftime('%d/%m %H:%M:%S'),
+                                           self.server.name, self.get_event_display())
+
 
 class BaseStat(models.Model):
     server = models.ForeignKey(Server)
@@ -68,11 +72,13 @@ class BaseStat(models.Model):
     class Meta:
         abstract = True
 
-
-class ProductionAmountStat(BaseStat):
     def __str__(self):
         return "[{:s}] <{:s}> {:s}: {:d}".format(self.time.strftime('%d/%m %H:%M:%S'),
                                                  self.server.name, self.key, self.value)
+
+
+class ProductionStat(BaseStat):
+    pass
 
 
 class ConsumptionStat(BaseStat):
