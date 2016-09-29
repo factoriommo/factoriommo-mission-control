@@ -9,7 +9,6 @@ from django.dispatch import receiver
 class Server(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     ip = models.CharField(max_length=32)
-    daemon_port = models.IntegerField()
     player_limit = models.IntegerField(blank=True, null=True)
     auth_token = models.CharField(max_length=40, blank=True, null=True)
 
