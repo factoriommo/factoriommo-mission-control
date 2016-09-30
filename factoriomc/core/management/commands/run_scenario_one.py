@@ -38,7 +38,7 @@ class Command(BaseCommand):
                 except IndexError:
                     pack4 = 0
 
-                data_list[server.slug] = {
+                data_list[server.pk] = {
                     'science-pack-1': pack1,
                     'science-pack-2': pack2,
                     'science-pack-3': pack3,
