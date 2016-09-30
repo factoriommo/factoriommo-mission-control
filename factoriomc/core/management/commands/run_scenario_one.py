@@ -56,3 +56,4 @@ class Command(BaseCommand):
             except KeyboardInterrupt:
                 self.stdout.write("Stopping..")
                 running=False
+                continue
