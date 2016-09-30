@@ -95,10 +95,10 @@ var factoriomc = FactorioMC.init('/server_callback/{{ object.id }}/');
 
 {% block script %}
 <script>
-$('button').click(function(elem) {
-    var elem = $(elem.target);
-    FactorioMC.WebSocket.send(elem.data('namespace'), elem.data('pack'));
+$('button').click(function(event) {
     event.preventDefault();
+    var elem = $(event.target || event.srcElement);
+    FactorioMC.WebSocket.send(elem.data('namespace'), elem.data('pack'));
 });
 
 $('.updatebutton').change(function(elem) {
