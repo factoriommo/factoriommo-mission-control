@@ -26,8 +26,10 @@ class Scenario(object):
 
 def event_received(event):
     if event.event == event.EVENT_PLAYER_JOINED:
+        print('Scenario player joined')
         return
     elif event.event == event.EVENT_PLAYER_LEFT:
+        print('Scenario player left')
         return
     elif event.event == event.EVENT_ROCKET_LAUNCHED:
         pack = {"namespace": "chat", "data":

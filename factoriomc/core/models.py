@@ -7,6 +7,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 
 class Server(models.Model):
@@ -39,8 +40,11 @@ def server_generate_auth_token(sender, instance, created, **kwargs):
 class Player(models.Model):
     ingame_name = models.CharField(max_length=255)
     on_server = models.ForeignKey(Server, blank=True, null=True)
-    last_seen = models.DateTimeField()
-    times_joined = models.IntegerField()
+    last_seen = models.DateTimeField(blank=True, null=True)
+    times_joined = models.IntegerField(default=0)
+
+    def __str__(self):
+        return '%s' % self.ingame_name
 
     def ban(self, reason):
         pass
@@ -70,6 +74,23 @@ class Event(models.Model):
 @receiver(post_save, sender=Event)
 def server_generate_auth_token(sender, instance, created, **kwargs):
     if created:
+        # Update Player list
+        if instance.event == instance.EVENT_PLAYER_JOINED:
+            data = json.loads(instance.data)
+            p, created = Player.objects.get_or_create(ingame_name=data['playername'])
+            p.on_server = instance.server
+            p.last_seen = timezone.now()
+            p.times_joined += 1
+            p.save()
+
+        elif instance.event == instance.EVENT_PLAYER_LEFT:
+            data = json.loads(instance.data)
+            p, created = Player.objects.get_or_create(ingame_name=data['playername'])
+            p.on_server = None
+            p.last_seen = timezone.now()
+            p.save()
+
+        # Send to scenario
         scenario_module = __import__('%s.scenario' % settings.SCENARIO)
         scenario_module.scenario.event_received(instance)
 
@@ -94,3 +115,4 @@ class ProductionStat(BaseStat):
 
 class ConsumptionStat(BaseStat):
     pass
+
