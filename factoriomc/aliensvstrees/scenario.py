@@ -42,3 +42,17 @@ class Scenario(object):
         pack = {'namespace': 'scores', 'data': data_list}
         for server in servers:
             server.message(pack)
+
+
+def event_received(event):
+    if event.event == event.EVENT_PLAYER_JOINED:
+        return
+    elif event.event == event.EVENT_PLAYER_LEFT:
+        return
+    elif event.event == event.EVENT_ROCKET_LAUNCHED:
+        pack = {"namespace": "chat", "data":
+                {"msg": "Uh-oh, the %s server just launched a rocket.." % event.server.name}}
+
+        for server in Server.objects.all():
+            if server != event.server:
+                server.message(pack)

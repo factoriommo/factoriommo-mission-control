@@ -3,6 +3,7 @@ import json
 import os
 
 from channels import Group
+from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -64,6 +65,13 @@ class Event(models.Model):
     def __str__(self):
         return "[{:s}] <{:s}> {:s}".format(self.time.strftime('%d/%m %H:%M:%S'),
                                            self.server.name, self.get_event_display())
+
+
+@receiver(post_save, sender=Event)
+def server_generate_auth_token(sender, instance, created, **kwargs):
+    if created:
+        scenario_module = __import__('%s.scenario' % settings.SCENARIO)
+        scenario_module.scenario.event_received(instance)
 
 
 class BaseStat(models.Model):
