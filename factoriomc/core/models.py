@@ -1,6 +1,8 @@
 import hashlib
+import json
 import os
 
+from channels import Group
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -11,12 +13,13 @@ class Server(models.Model):
     ip = models.CharField(max_length=32)
     player_limit = models.IntegerField(blank=True, null=True)
     auth_token = models.CharField(max_length=40, blank=True, null=True)
+    slug = models.SlugField(unique=True)
 
     def __str__(self):
         return self.name
 
     def message(self, message):
-        pass
+        Group('server-%d' % self.id).send({"text": json.dumps(message)})
 
     def set_player_limit(self, limit):
         pass
