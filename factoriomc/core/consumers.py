@@ -1,6 +1,6 @@
 import json
 
-from channels import Group
+from channels import Group, Channel
 from channels.auth import channel_session_user, channel_session_user_from_http
 from channels.handler import AsgiHandler
 from channels.sessions import channel_session
@@ -54,7 +54,7 @@ def fail_pack(namespace, msg):
         'text': json.dumps({
             "namespace": namespace,
             "data": {
-                "success": True,
+                "success": False,
                 "msg": msg
             }
         })
@@ -64,6 +64,13 @@ def fail_pack(namespace, msg):
 @channel_session
 def server_connected(message, pk=None):
     print("New connection on channel server %s" % (pk,))
+
+
+@channel_session
+def server_disconnected(message, pk=None):
+    Group('server-%s' % pk).discard(message.reply_channel)
+    print("Connection lost on channel server %s" % (pk,))
+    # Group("broadcast-%s-%s" % (endpoint, pk)).discard(message.reply_channel)
 
 
 @channel_session
@@ -83,6 +90,7 @@ def server_message(message, pk=None):
             if server.auth_token == msg['token']:
                 message.channel_session['authed'] = True
                 response = PACK_AUTH_OK
+                Group('server-%d' % server.id).add(message.reply_channel)
                 print("Succes")
             else:
                 response = PACK_AUTH_FAIL
@@ -151,7 +159,39 @@ def server_message(message, pk=None):
     print ("Unknown msg: ", namespace, msg)
 
 
-@channel_session
-def server_disconnected(message, pk=None):
-    print("Connection lost on channel server %s" % (pk,))
-    # Group("broadcast-%s-%s" % (endpoint, pk)).discard(message.reply_channel)
+
+@channel_session_user_from_http
+def admin_connected(message):
+    print("New connection on admin panel from %s" % message.user)
+
+
+@channel_session_user
+def admin_disconnected(message):
+    print("Connection lost on admin panel from %s" % message.user)
+
+
+@channel_session_user
+def admin_message(message, pk=None):
+    if not message.user.is_staff:
+        message.reply_channel.send(fail_pack('global', "Nope."))
+
+    raw_pack = json.loads(message.content['text'])
+    namespace, msg = raw_pack['namespace'], raw_pack['data']
+
+    if namespace == 'chat':
+        if msg['target'] == 'all':
+            del(raw_pack['data']['target'])
+            pack = json.dumps(raw_pack)
+            for s in Server.objects.all():
+                Group('server-%s' % s.id).send({"text": pack})
+        else:
+            target = msg['target']
+            del(raw_pack['data']['target'])
+            pack = json.dumps(raw_pack)
+            try:
+                Group('server-%d' % int(target)).send({"text": pack})
+            except ValueError:
+                message.reply_channel.send(fail_pack('chat', "Server failed."))
+        return
+
+    print ("Unknown msg: ", namespace, msg)

@@ -1,28 +1,16 @@
-"""factoriomc URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/1.8/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  url(r'^$', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  url(r'^$', Home.as_view(), name='home')
-Including another URLconf
-    1. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
-"""
 from channels.routing import include as include_chan
 from channels.routing import route
-from core.consumers import (server_connected, server_disconnected,
+from core.consumers import (admin_connected, admin_disconnected, admin_message,
+                            server_connected, server_disconnected,
                             server_message)
+from core.views import IndexView, ServerDebugView
 from django.conf.urls import include, url
 from django.contrib import admin
-from core.views import IndexView, ServerDebugView
+from django.contrib.admin.views.decorators import staff_member_required
 
 urlpatterns = [
     url(r'^$', IndexView.as_view(), name='index'),
-    url(r'^serverdebug/(?P<pk>[0-9]+)/$', ServerDebugView.as_view(), name='serverdebug'),
+    url(r'^serverdebug/(?P<pk>[0-9]+)/$', staff_member_required(ServerDebugView.as_view()), name='serverdebug'),
     url(r'^admin/', include(admin.site.urls)),
 ]
 
@@ -34,6 +22,13 @@ ws_routing = [
           path=r"^/server_callback/(?P<pk>[0-9]+)/$"),
     route("websocket.disconnect", server_disconnected,
           path=r"^/server_callback/(?P<pk>[0-9]+)/$"),
+
+    route("websocket.connect", admin_connected,
+          path=r"^/$"),
+    route("websocket.receive", admin_message,
+          path=r"^/$"),
+    route("websocket.disconnect", admin_disconnected,
+          path=r"^/$"),
 ]
 
 #task_routing = [
