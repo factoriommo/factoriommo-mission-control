@@ -11,19 +11,23 @@ class Scenario(object):
 
         for server in servers:
             try:
-                pack1 = ConsumptionStat.objects.filter(server=1).filter(key='science-pack-1').order_by('-id')[0]
+                pack1 = ConsumptionStat.objects.filter(server=server.id) \
+                    .filter(key='science-pack-1').order_by('-id')[0].value
             except IndexError:
                 pack1 = 0
             try:
-                pack2 = ConsumptionStat.objects.filter(server=1).filter(key='science-pack-2').order_by('-id')[0]
+                pack2 = ConsumptionStat.objects.filter(server=server.id) \
+                    .filter(key='science-pack-2').order_by('-id')[0].value
             except IndexError:
                 pack2 = 0
             try:
-                pack3 = ConsumptionStat.objects.filter(server=1).filter(key='science-pack-3').order_by('-id')[0]
+                pack3 = ConsumptionStat.objects.filter(server=server.id) \
+                    .filter(key='science-pack-3').order_by('-id')[0].value
             except IndexError:
                 pack3 = 0
             try:
-                pack4 = ConsumptionStat.objects.filter(server=1).filter(key='alien-science-pack').order_by('-id')[0]
+                pack4 = ConsumptionStat.objects.filter(server=server.id) \
+                    .filter(key='alien-science-pack').order_by('-id')[0].value
             except IndexError:
                 pack4 = 0
 
