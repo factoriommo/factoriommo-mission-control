@@ -6,11 +6,11 @@ from core.consumers import (admin_connected, admin_disconnected, admin_message,
 from core.views import IndexView, ServerDebugView
 from django.conf.urls import include, url
 from django.contrib import admin
-from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import user_passes_test
 
 urlpatterns = [
-    url(r'^$', IndexView.as_view(), name='index'),
-    url(r'^serverdebug/(?P<pk>[0-9]+)/$', staff_member_required(ServerDebugView.as_view()), name='serverdebug'),
+    url(r'^$', user_passes_test(lambda u: u.is_staff)(IndexView.as_view()), name='index'),
+    url(r'^serverdebug/(?P<pk>[0-9]+)/$', user_passes_test(lambda u: u.is_superuser)(ServerDebugView.as_view()), name='serverdebug'),
     url(r'^admin/', include(admin.site.urls)),
 ]
 
