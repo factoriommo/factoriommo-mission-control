@@ -36,6 +36,8 @@ PACK_NO_SERVER = {  # Connected to a websocket server endpoint that doesn't exis
         "msg": "This endpoint does not exist."
     }
 }
+
+
 def ok_pack(namespace):
     return {
         'text': json.dumps({
@@ -45,6 +47,7 @@ def ok_pack(namespace):
             }
         })
     }
+
 
 def fail_pack(namespace, msg):
     return {
@@ -95,7 +98,7 @@ def server_message(message, pk=None):
 
     if namespace == 'production':
         try:
-            if int(msg['data']) <= 0:
+            if int(msg['data']) < 0:
                 raise ValueError
         except ValueError:
                 message.reply_channel.send(fail_pack(namespace, "Data has to be an int bigger than 0"))
@@ -115,7 +118,7 @@ def server_message(message, pk=None):
 
     if namespace == 'consumption':
         try:
-            if int(msg['data']) <= 0:
+            if int(msg['data']) < 0:
                 raise ValueError
         except ValueError:
                 message.reply_channel.send(fail_pack(namespace, "Data has to be an int bigger than 0"))
