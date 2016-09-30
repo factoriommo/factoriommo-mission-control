@@ -194,4 +194,11 @@ def admin_message(message, pk=None):
                 message.reply_channel.send(fail_pack('chat', "Server failed."))
         return
 
-    print ("Unknown msg: ", namespace, msg)
+    if namespace == 'rconcommand':
+        for server in Server.objects.all():
+            server.message(msg)
+
+        message.reply_channel.send(ok_pack(namespace))
+        return
+
+    print("Unknown admin msg: ", namespace, msg)
