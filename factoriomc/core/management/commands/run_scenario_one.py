@@ -3,6 +3,7 @@ from time import sleep
 from core.models import Server, ConsumptionStat
 from django.core.management.base import BaseCommand
 from django.db import reset_queries
+from django.conf import settings
 
 WAIT_TIME = 2
 
@@ -13,7 +14,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         running=True
 
-        self.stdout.write("Starting scenario one..")
+        self.stdout.write("Starting scenario %s.." % settings.SCENARIO)
         while running:
             reset_queries()
             try:
