@@ -1,5 +1,12 @@
 from core.models import Server, ConsumptionStat
 
+PACK_WIN = {"namespace": "victory", "data": { "winner": True }}
+PACK_LOSE = {"namespace": "victory", "data": { "winner": False }}
+
+TARGET_PACK_1 = 8000
+TARGET_PACK_2 = 8000
+TARGET_PACK_3 = 2000
+TARGET_PACK_4 = 250
 
 class Scenario(object):
 
@@ -27,6 +34,23 @@ def update_stats():
     for server in servers:
         server.message(pack)
 
+    winner = None
+    # See if we have a winner
+    for server in servers:
+        if data_list[server.pk]['science-pack-1'] >= TARGET_PACK_1 and \
+                data_list[server.pk]['science-pack-2'] >= TARGET_PACK_2 and \
+                data_list[server.pk]['science-pack-3'] >= TARGET_PACK_3 and \
+                data_list[server.pk]['alien-science-pack'] >= TARGET_PACK_4:
+            winner = server
+            break
+
+    if winner:
+        for server in servers:
+            if server == winner:
+                server.message(PACK_WIN)
+            else:
+                server.message(PACK_LOSE)
+
 
 def event_received(event):
     if event.event == event.EVENT_PLAYER_JOINED:
@@ -43,8 +67,8 @@ def event_received(event):
 
 
 def consumptionstat_received(stat):
-    pass
+    update_stats()
 
 
 def productionstat_received(stat):
-    update_stats()
+    pass
