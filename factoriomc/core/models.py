@@ -132,3 +132,17 @@ def productionstat_postsave(sender, instance, created, **kwargs):
 def consumptionstat_postsave(sender, instance, created, **kwargs):
     scenario_module = __import__('%s.scenario' % settings.SCENARIO)
     scenario_module.scenario.consumptionstat_received(instance)
+
+
+class ScenarioData(models.Model):
+    """ For saving scenario data """
+    server = models.ForeignKey(Server, blank=True, null=True)
+    key = models.CharField(max_length=255)
+    value = models.TextField()
+
+    def __str__(self):
+        try:
+            return "<{:s}> {:s} : {:s}".format(self.server.name, self.key, self.value)
+        except AttributeError:
+            return "<none> {:s} : {:s}".format(self.key, self.value)
+

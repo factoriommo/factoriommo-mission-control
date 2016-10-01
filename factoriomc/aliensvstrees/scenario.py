@@ -1,4 +1,6 @@
-from core.models import Server, ConsumptionStat
+import copy
+
+from core.models import ConsumptionStat, ScenarioData, Server
 
 PACK_WIN = {"namespace": "victory", "data": { "winner": True }}
 PACK_LOSE = {"namespace": "victory", "data": { "winner": False }}
@@ -35,6 +37,51 @@ def update_stats():
         server.message(pack)
 
     winner = None
+
+    lead_table = {}
+    # Update lead tables
+    for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack']:
+        try:
+            lead_table[key] = ScenarioData.objects.get(key='leader-%s' % key)
+        except ScenarioData.DoesNotExist:
+            lead_table[key] = ScenarioData.objects.create(key='leader-%s' % key, value=0)
+
+    new_leaders = {}
+    for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack']:
+        # Find highest server for key
+        highest = 0
+        highest_server = None
+        for server in servers:
+            if int(data_list[server.pk][key]) > int(lead_table[key].value):
+                if int(data_list[server.pk][key]) > highest:
+                    highest = data_list[server.pk][key]
+                    highest_server = server
+
+        if highest_server is not None:
+            new_leaders[key] = highest_server
+
+    for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack']:
+        if key not in new_leaders:
+            continue
+
+        if lead_table[key].server is None or \
+                new_leaders[key].pk != lead_table[key].server.pk:
+            # Save new leader
+
+            for server in servers:
+                if server is new_leaders[key]:
+                    pack = {"namespace": "chat", "data":
+                            {"msg": "You have taken the lead in {:s}".format(key)}}
+                    server.message(pack)
+                else:
+                    pack = {"namespace": "chat", "data":
+                            {"msg": "You have taken the lead in {:s}".format(new_leaders[key].name, key)}}
+                    server.message(pack)
+
+        lead_table[key].server = new_leaders[key]
+        lead_table[key].value = data_list[new_leaders[key].pk][key]
+        lead_table[key].save()
+
     # See if we have a winner
     for server in servers:
         if data_list[server.pk]['science-pack-1'] >= TARGET_PACK_1 and \
