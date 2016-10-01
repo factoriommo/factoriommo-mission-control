@@ -10,6 +10,14 @@ TARGET_PACK_2 = 8000
 TARGET_PACK_3 = 2000
 TARGET_PACK_4 = 250
 
+
+PACK_DICT = {
+    'science-pack-1': 'Red science',
+    'science-pack-2': 'Green science',
+    'science-pack-3': 'Blue science',
+    'alien-science-pack': 'Alien science'
+}
+
 class Scenario(object):
 
     def tick(self):
@@ -71,11 +79,11 @@ def update_stats():
             for server in servers:
                 if server is new_leaders[key]:
                     pack = {"namespace": "chat", "data":
-                            {"msg": "You have taken the lead in {:s}".format(key)}}
+                            {"msg": "You have taken the lead in {:s}".format(PACK_DICT[key])}}
                     server.message(pack)
                 else:
                     pack = {"namespace": "chat", "data":
-                            {"msg": "You have taken the lead in {:s}".format(new_leaders[key].name, key)}}
+                            {"msg": "{:s} have taken the lead in {:s}".format(new_leaders[key].name, PACK_DICT[key])}}
                     server.message(pack)
 
         lead_table[key].server = new_leaders[key]
