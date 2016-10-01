@@ -198,7 +198,7 @@ def admin_message(message, pk=None):
         pack = json.dumps(raw_pack)
         for server in Server.objects.all():
             try:
-                Group('server-%d' % int(target)).send({"text": pack})
+                Group('server-%d' % int(server.id)).send({"text": pack})
             except ValueError:
                 message.reply_channel.send(fail_pack('chat', "Server failed."))
                 return
