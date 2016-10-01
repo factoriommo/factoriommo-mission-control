@@ -20,6 +20,11 @@ class Server(models.Model):
     def __str__(self):
         return self.name
 
+    @classmethod
+    def message_all(message):
+        for server in Server.objects.all():
+            server.message(message)
+
     def message(self, message):
         Group('server-%d' % self.id).send({"text": json.dumps(message)})
 
@@ -72,7 +77,7 @@ class Event(models.Model):
 
 
 @receiver(post_save, sender=Event)
-def server_generate_auth_token(sender, instance, created, **kwargs):
+def event_post_save(sender, instance, created, **kwargs):
     if created:
         # Update Player list
         if instance.event == instance.EVENT_PLAYER_JOINED:
@@ -116,3 +121,14 @@ class ProductionStat(BaseStat):
 class ConsumptionStat(BaseStat):
     pass
 
+
+@receiver(post_save, sender=ProductionStat)
+def productionstat_postsave(sender, instance, created, **kwargs):
+    scenario_module = __import__('%s.scenario' % settings.SCENARIO)
+    scenario_module.scenario.productionstat_received(instance)
+
+
+@receiver(post_save, sender=ConsumptionStat)
+def consumptionstat_postsave(sender, instance, created, **kwargs):
+    scenario_module = __import__('%s.scenario' % settings.SCENARIO)
+    scenario_module.scenario.consumptionstat_received(instance)
