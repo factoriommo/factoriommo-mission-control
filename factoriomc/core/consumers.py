@@ -145,15 +145,12 @@ def server_message(message, pk=None):
         return
 
     if namespace == 'event':
-        try:
-            Event.objects.create(
-                server = server,
-                event = msg['type'],
-                data = json.dumps(msg['data'])
-            )
-            message.reply_channel.send(ok_pack(namespace))
-        except json.decoder.JSONDecodeError:
-            message.reply_channel.send(fail_pack(namespace, "Please send JSON data as data"))
+        Event.objects.create(
+            server = server,
+            event = msg['type'],
+            data = json.dumps(msg['data'])
+        )
+        message.reply_channel.send(ok_pack(namespace))
         return
 
     print ("Unknown msg: ", namespace, msg)
