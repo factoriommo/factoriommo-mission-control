@@ -27,6 +27,23 @@
                     <button data-namespace="chat" data-pack="" class="btn btn-default" id="sendMessage">Send Message</button>
                 </form>
             </div>
+        </div>
+        {% for server in servers %}
+        <div class="col-md-6">
+            <div class="well well-sm">
+                <h4>Server: {{ server.name }}</h4>
+                <table class="table">
+                {% for player in server.player_set.all %}
+                    <tr><td>{{ player.ingame_name }}</td></tr>
+                {% empty %}
+                    <tr><td>No players</td></tr>
+                {% endfor %}
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="col-md-12">
             <div class="well well-sm">
                 <h4>Send rcon command to ALL servers</h4>
                 <form class="form-inline">
