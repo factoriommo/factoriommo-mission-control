@@ -31,7 +31,7 @@ def update_stats():
     data_list = { }
 
     for server in servers:
-        data_list[server.pk] = {'players-online': str(server.player_set.count())}
+        data_list[server.pk] = {'players-online': str(server.players_online)}
 
         for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack']:
             try:

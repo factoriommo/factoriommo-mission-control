@@ -153,6 +153,16 @@ def server_message(message, pk=None):
         message.reply_channel.send(ok_pack(namespace))
         return
 
+    if namespace == 'updatecounter':
+        if msg['key'] == "player-online-count":
+            try:
+                server.players_online = int(msg['data'])
+                server.save()
+                message.reply_channel.send(ok_pack(namespace))
+            except:
+                pass
+        return
+
     print ("Unknown msg: ", namespace, msg)
 
 
