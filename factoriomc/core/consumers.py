@@ -196,7 +196,7 @@ def admin_message(message, pk=None):
 
     if namespace == 'rconcommand':
         for server in Server.objects.all():
-            server.message(msg)
+            server.message(json.dumps(raw_pack))
 
         message.reply_channel.send(ok_pack(namespace))
         return
