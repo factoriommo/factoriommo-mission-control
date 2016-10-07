@@ -1,11 +1,11 @@
-import json
-
 from channels import Group, Channel
 from channels.auth import channel_session_user, channel_session_user_from_http
-from channels.handler import AsgiHandler
 from channels.sessions import channel_session
+
 from core.models import ConsumptionStat, Event, ProductionStat, Server
-from django.http import HttpResponse
+
+import json
+
 
 PACK_AUTH_OK = {  # Auth succeeds
     "namespace": "auth",
@@ -114,9 +114,9 @@ def server_message(message, pk=None):
 
         try:
             ProductionStat.objects.create(
-                server = server,
-                key = msg['type'],
-                value = msg['data']
+                server=server,
+                key=msg['type'],
+                value=msg['data']
             )
             message.reply_channel.send(ok_pack(namespace))
         except:
@@ -134,9 +134,9 @@ def server_message(message, pk=None):
 
         try:
             ConsumptionStat.objects.create(
-                server = server,
-                key = msg['type'],
-                value = msg['data']
+                server=server,
+                key=msg['type'],
+                value=msg['data']
             )
             message.reply_channel.send(ok_pack(namespace))
         except:
@@ -146,9 +146,9 @@ def server_message(message, pk=None):
 
     if namespace == 'event':
         Event.objects.create(
-            server = server,
-            event = msg['type'],
-            data = json.dumps(msg['data'])
+            server=server,
+            event=msg['type'],
+            data=json.dumps(msg['data'])
         )
         message.reply_channel.send(ok_pack(namespace))
         return
@@ -164,8 +164,7 @@ def server_message(message, pk=None):
 
         return
 
-    print ("Unknown msg: ", namespace, msg)
-
+    print("Unknown msg: ", namespace, msg)
 
 
 @channel_session_user_from_http
@@ -215,3 +214,26 @@ def admin_message(message, pk=None):
         return
 
     print("Unknown admin msg: ", namespace, msg)
+
+
+@channel_session_user_from_http
+def public_connected(message):
+    print("New connection on public channel from %s" % message.user)
+    Group('public').add(message.reply_channel)
+
+    for server in Server.objects.all():
+        for i in server.productionstat_set.order_by('-time')[:20]:
+            i.broadcast(request=message)
+        for i in server.consumptionstat_set.order_by('-time')[:20]:
+            i.broadcast(request=message)
+
+
+@channel_session_user
+def public_disconnected(message):
+    print("Connection lost on public channel from %s" % message.user)
+    Group('public').discard(message.reply_channel)
+
+
+@channel_session_user
+def public_message(message, pk=None):
+    print("Received some crap from a public ws: %s" % message.text)

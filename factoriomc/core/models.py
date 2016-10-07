@@ -102,6 +102,8 @@ def event_post_save(sender, instance, created, **kwargs):
 
 
 class BaseStat(models.Model):
+    ws_namespace = "basestat"
+
     server = models.ForeignKey(Server)
     time = models.DateTimeField(auto_now_add=True)
     key = models.CharField(max_length=100)
@@ -114,25 +116,47 @@ class BaseStat(models.Model):
         return "[{:s}] <{:s}> {:s}: {:d}".format(self.time.strftime('%d/%m %H:%M:%S'),
                                                  self.server.name, self.key, self.value)
 
+    def broadcast(self, group=None, request=None):
+        """Broadcast this stat over websocket.
+            Group: the name of the channels group
+            Request: the original message (this uses message.reply_channel)
+        """
+        data = json.dumps({
+            'namespace': self.ws_namespace,
+            'server': self.server.name,
+            'type': self.key,
+            'data': {
+                'value': self.value,
+                'timestamp': int(self.time.strftime('%s'))
+            }
+        })
+
+        if group:
+            Group(group).send({'text': data})
+        if request:
+            request.reply_channel.send({'text': data})
+
 
 class ProductionStat(BaseStat):
-    pass
+    ws_namespace = 'production'
 
 
 class ConsumptionStat(BaseStat):
-    pass
+    ws_namespace = 'consumption'
 
 
 @receiver(post_save, sender=ProductionStat)
 def productionstat_postsave(sender, instance, created, **kwargs):
     scenario_module = __import__('%s.scenario' % settings.SCENARIO)
     scenario_module.scenario.productionstat_received(instance)
+    sender.broadcast(group='public')
 
 
 @receiver(post_save, sender=ConsumptionStat)
 def consumptionstat_postsave(sender, instance, created, **kwargs):
     scenario_module = __import__('%s.scenario' % settings.SCENARIO)
     scenario_module.scenario.consumptionstat_received(instance)
+    sender.broadcast(group='public')
 
 
 class ScenarioData(models.Model):
@@ -146,4 +170,3 @@ class ScenarioData(models.Model):
             return "<{:s}> {:s} : {:s}".format(self.server.name, self.key, self.value)
         except AttributeError:
             return "<none> {:s} : {:s}".format(self.key, self.value)
-

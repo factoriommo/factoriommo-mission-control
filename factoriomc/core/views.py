@@ -7,6 +7,14 @@ from django.views.generic import DetailView, TemplateView
 class IndexView(TemplateView):
     template_name = 'index.html'
 
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        return context
+
+
+class MissionControlView(TemplateView):
+    template_name = 'mission_control.html'
+
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
