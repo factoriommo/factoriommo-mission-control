@@ -149,14 +149,14 @@ class ConsumptionStat(BaseStat):
 def productionstat_postsave(sender, instance, created, **kwargs):
     scenario_module = __import__('%s.scenario' % settings.SCENARIO)
     scenario_module.scenario.productionstat_received(instance)
-    sender.broadcast(group='public')
+    instance.broadcast(group='public')
 
 
 @receiver(post_save, sender=ConsumptionStat)
 def consumptionstat_postsave(sender, instance, created, **kwargs):
     scenario_module = __import__('%s.scenario' % settings.SCENARIO)
     scenario_module.scenario.consumptionstat_received(instance)
-    sender.broadcast(group='public')
+    instance.broadcast(group='public')
 
 
 class ScenarioData(models.Model):
