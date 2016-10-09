@@ -19,7 +19,7 @@ urlpatterns = [
 
     url(r'^admin/', include(admin.site.urls)),
 
-    url(r'^', IndexView.as_view(), name='index')
+    url(r'^$', IndexView.as_view(), name='index')
 ]
 
 ws_routing = [
