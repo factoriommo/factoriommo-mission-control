@@ -58,6 +58,7 @@ class Game(models.Model):
     name = models.CharField(max_length=255)
     game_start = models.DateTimeField()
     game_end = models.DateTimeField()
+    game_over = models.BooleanField()
 
     def finish(self):
         for p in Player.objects.all():
