@@ -100,8 +100,11 @@ def update_stats():
                 data_list[server.pk]['alien-science-pack'] >= TARGET_PACK_4:
             winner = server
             break
+    game = Game.objects.get(pk=settings.ACTIVE_GAME)
 
-    if winner:
+    if winner and not game.game_over:
+        game.game_over = True
+        game.save()
         for server in servers:
             if server == winner:
                 server.message(PACK_WIN)
