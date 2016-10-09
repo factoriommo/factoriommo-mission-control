@@ -2,7 +2,7 @@ from channels import Group, Channel
 from channels.auth import channel_session_user, channel_session_user_from_http
 from channels.sessions import channel_session
 
-from core.models import ConsumptionStat, Event, ProductionStat, Server
+from core.models import ConsumptionStat, Event, ProductionStat, Server, Game
 from django.conf import settings
 
 import json
@@ -163,8 +163,16 @@ def server_message(message, pk=None):
                 server.players_online = int(msg['data'])
                 server.save()
                 message.reply_channel.send(ok_pack(namespace))
+            elif msg['type'] == "rocket-progress":
+                ConsumptionStat.objects.create(
+                    server=server,
+                    key=msg['type'],
+                    value=msg['data'],
+                    game_id=settings.ACTIVE_GAME
+                )
+                message.reply_channel.send(ok_pack(namespace))
         except:
-            pass
+            message.reply_channel.send(fail_pack(namespace, "Unknown error occured"))
 
         return
 
@@ -225,11 +233,11 @@ def public_connected(message):
     print("New connection on public channel from %s" % message.user)
     Group('public').add(message.reply_channel)
 
-    for server in Server.objects.all():
-        for i in server.productionstat_set.order_by('-time')[:20]:
-            i.broadcast(request=message)
-        for i in server.consumptionstat_set.order_by('-time')[:20]:
-            i.broadcast(request=message)
+    game = Game.get_active()
+    for i in game.productionstat_set.order_by('-time'):
+        i.broadcast(request=message)
+    for i in game.consumptionstat_set.order_by('-time'):
+        i.broadcast(request=message)
 
 
 @channel_session_user
