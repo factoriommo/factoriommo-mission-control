@@ -95,24 +95,6 @@ def update_stats():
         lead_table[key].value = data_list[new_leaders[key].pk][key]
         lead_table[key].save()
 
-    # See if we have a winner
-    for server in servers:
-        if data_list[server.pk]['science-pack-1'] >= TARGET_PACK_1 and \
-                data_list[server.pk]['science-pack-2'] >= TARGET_PACK_2 and \
-                data_list[server.pk]['science-pack-3'] >= TARGET_PACK_3 and \
-                data_list[server.pk]['alien-science-pack'] >= TARGET_PACK_4:
-            winner = server
-            break
-    game = Game.objects.get(pk=settings.ACTIVE_GAME)
-
-    if winner and not game.game_over:
-        game.game_over = True
-        game.save()
-        for server in servers:
-            if server == winner:
-                server.message(PACK_WIN)
-            else:
-                server.message(PACK_LOSE)
 
 
 def event_received(event):
@@ -121,12 +103,19 @@ def event_received(event):
     elif event.event == event.EVENT_PLAYER_LEFT:
         update_stats()
     elif event.event == event.EVENT_ROCKET_LAUNCHED:
-        pack = {"namespace": "chat", "data":
-                {"msg": "Uh-oh, the %s server just launched a rocket.." % event.server.name}}
+        # See if we have a winner
+        game = Game.objects.get(pk=settings.ACTIVE_GAME)
 
-        for server in Server.objects.all():
-            if server != event.server:
-                server.message(pack)
+        winner = event.server
+
+        if not game.game_over:
+            game.game_over = True
+            game.save()
+            for server in servers:
+                if server == winner:
+                    server.message(PACK_WIN)
+                else:
+                    server.message(PACK_LOSE)
 
 
 def consumptionstat_received(stat):
