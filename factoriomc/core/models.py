@@ -12,11 +12,9 @@ from django.utils import timezone
 
 class Server(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
-    ip = models.CharField(max_length=32)
     player_limit = models.IntegerField(blank=True, null=True)
     players_online = models.PositiveIntegerField(default=0)
     auth_token = models.CharField(max_length=40, blank=True, null=True)
-    slug = models.SlugField(unique=True)
 
     def __str__(self):
         return self.name
