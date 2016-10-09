@@ -3,6 +3,7 @@ from channels.auth import channel_session_user, channel_session_user_from_http
 from channels.sessions import channel_session
 
 from core.models import ConsumptionStat, Event, ProductionStat, Server
+from django.conf import settings
 
 import json
 
@@ -116,7 +117,8 @@ def server_message(message, pk=None):
             ProductionStat.objects.create(
                 server=server,
                 key=msg['type'],
-                value=msg['data']
+                value=msg['data'],
+                game_id=settings.ACTIVE_GAME
             )
             message.reply_channel.send(ok_pack(namespace))
         except:
@@ -136,7 +138,8 @@ def server_message(message, pk=None):
             ConsumptionStat.objects.create(
                 server=server,
                 key=msg['type'],
-                value=msg['data']
+                value=msg['data'],
+                game_id=settings.ACTIVE_GAME
             )
             message.reply_channel.send(ok_pack(namespace))
         except:
@@ -148,7 +151,8 @@ def server_message(message, pk=None):
         Event.objects.create(
             server=server,
             event=msg['type'],
-            data=json.dumps(msg['data'])
+            data=json.dumps(msg['data']),
+            game_id=settings.ACTIVE_GAME
         )
         message.reply_channel.send(ok_pack(namespace))
         return
