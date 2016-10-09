@@ -60,6 +60,10 @@ class Game(models.Model):
     game_end = models.DateTimeField()
     game_over = models.BooleanField()
 
+    @classmethod
+    def get_active(cls):
+        return cls.objects.get(id=settings.ACTIVE_GAME)
+
     def finish(self):
         for p in Player.objects.all():
             p.on_server = None
