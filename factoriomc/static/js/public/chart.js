@@ -2,6 +2,8 @@ $(function() {
 
     Chart.defaults.global.elements.line.borderWidth = 1;
     Chart.defaults.global.legend.position = 'right';
+    Chart.defaults.global.elements.point.radius = 0;
+    Chart.defaults.global.elements.point.hitRadius = 2;
 
     // var PlayersChart = new Chart($("#playersChart"), {
     //     type: 'line',
@@ -59,7 +61,7 @@ $(function() {
     }
 
     ChartController.prototype.updateAllChart = function(name, server_name) {
-      var chart = this._charts[name][server_name];
+        var chart = this._charts[name][server_name];
         for (var i = 0; i < chart.data.length; i++) {
             this.updateChart(name, i, server_name)
         }
@@ -72,26 +74,49 @@ $(function() {
             chart = obj.chart;
 
 
-        points.forEach(function(p) {
-            if (p.timestamp < obj.startTime || obj.startTime == 0) {
-                obj.startTime = p.timestamp;
-                controller.updateAllChart(name, server_name);
-                return
-            }
-        })
 
-        points = _.map(points, function(p) {
-            return {
-                x: (p.timestamp - obj.startTime) / 60,
-                y: p.value
-            }
-        });
-        points.sort(function(a, b) {
-            return a.x - b.x
-        })
-        chart.data.datasets[type].data = points;
 
         chart.update()
+    }
+
+    ChartController.prototype.pushPoint = function(name, type, server_name, point) {
+        var controller = this;
+        var obj = this._charts[name][server_name],
+            points = obj.data[type],
+            chart = obj.chart;
+
+        if (points.length > 0 &&points[points.length - 1].timestamp < point.timestamp) {
+            points.push(point)
+
+            chart.data.datasets[type].data.push({
+                x: Math.round((point.timestamp - obj.startTime) * 10 / 6) / 100,
+                y: p.value
+            })
+
+        } else {
+          points.push(point)
+          points.forEach(function(p) {
+              if (p.timestamp < obj.startTime || obj.startTime == 0) {
+                  obj.startTime = p.timestamp;
+                  controller.updateAllChart(name, server_name);
+                  return
+              }
+          })
+
+          points = _.map(points, function(p) {
+              return {
+                  x: Math.round((p.timestamp - obj.startTime) * 10 / 6) / 100,
+                  y: p.value
+              }
+          });
+          points.sort(function(a, b) {
+              return a.x - b.x
+          })
+          chart.data.datasets[type].data = points;
+        }
+
+        chart.update()
+
     }
 
     ChartController.prototype.buildPlayersData = function(data, team) {
@@ -117,66 +142,66 @@ $(function() {
         return players;
     }
 
-    ChartController.prototype.createScienceChart = function(server_name){
-      var chart_canvas = $('<canvas class="server_'+server_name+'" width="400" height="200"></canvas>')
-      $('#scienceCharts').append(chart_canvas)
+    ChartController.prototype.createScienceChart = function(server_name) {
+        var chart_canvas = $('<canvas class="server_' + server_name + '" width="400" height="200"></canvas>')
+        $('#scienceCharts').append(chart_canvas)
 
-      var ScienceChart = new Chart(chart_canvas, {
-          type: 'line',
-          data: {
-              // labels: ["Science"],
-              datasets: [{
-                  label: "Red Science",
-                  borderColor: "#FF0000",
-                  backgroundColor: "rgba(0,0,0,0)",
-                  borderCapStyle: 'butt',
-                  data: []
-              }, {
-                  label: "Green Science",
-                  borderColor: "#00cc00",
-                  backgroundColor: "rgba(0,0,0,0)",
-                  data: []
-              }, {
-                  label: "Blue Science",
-                  borderColor: "#4997D0",
-                  backgroundColor: "rgba(0,0,0,0)",
-                  data: []
-              }, {
-                  label: "Alien Science",
-                  borderColor: "#9F00FF",
-                  backgroundColor: "rgba(0,0,0,0)",
-                  data: []
-              }]
-          },
-          options: {
-              scales: {
-                  xAxes: [{
-                      type: 'linear',
-                      position: 'bottom',
-                      scaleLabel: {
-                        display: true,
-                        labelString: "minutes"
-                      }
-                  }]
-              },
-              title: {
-                display: true,
-                text: server_name,
-                fullWidth: false,
-                fontSize: 18
-              },
-          },
-      });
+        var ScienceChart = new Chart(chart_canvas, {
+            type: 'line',
+            data: {
+                // labels: ["Science"],
+                datasets: [{
+                    label: "Red Science",
+                    borderColor: "#FF0000",
+                    backgroundColor: "rgba(0,0,0,0)",
+                    borderCapStyle: 'butt',
+                    data: []
+                }, {
+                    label: "Green Science",
+                    borderColor: "#00cc00",
+                    backgroundColor: "rgba(0,0,0,0)",
+                    data: []
+                }, {
+                    label: "Blue Science",
+                    borderColor: "#4997D0",
+                    backgroundColor: "rgba(0,0,0,0)",
+                    data: []
+                }, {
+                    label: "Alien Science",
+                    borderColor: "#9F00FF",
+                    backgroundColor: "rgba(0,0,0,0)",
+                    data: []
+                }]
+            },
+            options: {
+                scales: {
+                    xAxes: [{
+                        type: 'linear',
+                        position: 'bottom',
+                        scaleLabel: {
+                            display: true,
+                            labelString: "minutes"
+                        }
+                    }]
+                },
+                title: {
+                    display: true,
+                    text: server_name,
+                    fullWidth: false,
+                    fontSize: 18
+                },
+            },
+        });
 
-      this._charts.science[server_name] = this.getChartModel(4, ScienceChart);
+        this._charts.science[server_name] = this.getChartModel(4, ScienceChart);
     }
 
     ChartController.prototype.receiveMessage = function(data) {
         var controller = this;
         switch (true) {
             case /science-pack/.test(data.type):
-                if(typeof this._charts.science[data.server] !== 'object'){
-                  controller.createScienceChart(data.server)
+                if (typeof this._charts.science[data.server] !== 'object') {
+                    controller.createScienceChart(data.server)
                 }
 
                 // TODO: discern between production/consumption
@@ -189,8 +214,7 @@ $(function() {
                             break;
                         }
                     }
-                    this._charts.science[data.server].data[science_type - 1].push(data.data);
-                    this.updateChart('science', science_type - 1, data.server);
+                    this.pushPoint('science', science_type - 1, data.server, data.data);
                 }
                 break;
             case /players/.test(data.type):
@@ -219,5 +243,4 @@ $(function() {
         CC.receiveMessage(data);
         // console.log(e);
     }
-
 });
