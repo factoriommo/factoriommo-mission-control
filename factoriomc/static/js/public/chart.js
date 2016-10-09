@@ -211,7 +211,8 @@ $(function() {
      * WebSocket listener
      */
 
-    var ws = new WebSocket('ws://localhost:8000/ws_v1/public/');
+    var url = WEBSOCKET_BASEURL + "/public/";
+    var ws = new WebSocket(url);
     ws.onmessage = function(e) {
         var data = JSON.parse(e.data);
 
