@@ -57,7 +57,7 @@ class Player(models.Model):
 class Game(models.Model):
     name = models.CharField(max_length=255)
     game_start = models.DateTimeField()
-    game_end = models.DateTimeField()
+    game_end = models.DateTimeField(blank=True, null=True)
     game_over = models.BooleanField()
 
     @classmethod
@@ -72,6 +72,8 @@ class Game(models.Model):
         for s in Server.objects.all():
             s.players_online = 0
             s.save()
+        self.game_end = timezone.now()
+        self.save()
 
 
 class Event(models.Model):
@@ -191,3 +193,4 @@ class ScenarioData(models.Model):
             return "<{:s}> {:s} : {:s}".format(self.server.name, self.key, self.value)
         except AttributeError:
             return "<none> {:s} : {:s}".format(self.key, self.value)
+
