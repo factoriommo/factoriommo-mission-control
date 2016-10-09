@@ -12,11 +12,9 @@ from django.utils import timezone
 
 class Server(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
-    ip = models.CharField(max_length=32)
     player_limit = models.IntegerField(blank=True, null=True)
     players_online = models.PositiveIntegerField(default=0)
     auth_token = models.CharField(max_length=40, blank=True, null=True)
-    slug = models.SlugField(unique=True)
 
     def __str__(self):
         return self.name
@@ -56,6 +54,21 @@ class Player(models.Model):
         pass
 
 
+class Game(models.Model):
+    name = models.CharField(max_length=255)
+    game_start = models.DateTimeField()
+    game_end = models.DateTimeField()
+
+    def finish(self):
+        for p in Player.objects.all():
+            p.on_server = None
+            p.save()
+
+        for s in Server.objects.all():
+            s.players_online = 0
+            s.save()
+
+
 class Event(models.Model):
     EVENT_PLAYER_JOINED = 'player_joined'
     EVENT_PLAYER_LEFT = 'player_left'
@@ -71,6 +84,7 @@ class Event(models.Model):
     time = models.DateTimeField(auto_now_add=True)
     event = models.CharField(max_length=255, choices=EVENT_CHOICES)
     data = models.TextField()
+    game = models.ForeignKey(Game)
 
     def __str__(self):
         return "[{:s}] <{:s}> {:s}".format(self.time.strftime('%d/%m %H:%M:%S'),
@@ -108,6 +122,7 @@ class BaseStat(models.Model):
     time = models.DateTimeField(auto_now_add=True)
     key = models.CharField(max_length=100)
     value = models.IntegerField()
+    game = models.ForeignKey(Game)
 
     class Meta:
         abstract = True
@@ -164,6 +179,7 @@ class ScenarioData(models.Model):
     server = models.ForeignKey(Server, blank=True, null=True)
     key = models.CharField(max_length=255)
     value = models.TextField()
+    game = models.ForeignKey(Game)
 
     def __str__(self):
         try:

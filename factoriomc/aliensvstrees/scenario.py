@@ -1,6 +1,8 @@
 import copy
 
 from core.models import ConsumptionStat, ScenarioData, Server
+from django.conf import settings
+
 
 PACK_WIN = {"namespace": "victory", "data": { "winner": True }}
 PACK_LOSE = {"namespace": "victory", "data": { "winner": False }}
@@ -36,7 +38,7 @@ def update_stats():
         for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack']:
             try:
                 data_list[server.pk][key] = ConsumptionStat.objects.filter(server=server.id) \
-                    .filter(key=key).order_by('-id')[0].value
+                    .filter(key=key).filter(game=settings.ACTIVE_GAME).order_by('-id')[0].value
             except IndexError:
                 data_list[server.pk][key] = 0
 
@@ -50,9 +52,9 @@ def update_stats():
     # Update lead tables
     for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack']:
         try:
-            lead_table[key] = ScenarioData.objects.get(key='leader-%s' % key)
+            lead_table[key] = ScenarioData.objects.get(key='leader-%s' % key, game=settings.ACTIVE_GAME)
         except ScenarioData.DoesNotExist:
-            lead_table[key] = ScenarioData.objects.create(key='leader-%s' % key, value=0)
+            lead_table[key] = ScenarioData.objects.create(key='leader-%s' % key, value=0, game=settings.ACTIVE_GAME)
 
     new_leaders = {}
     for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack']:

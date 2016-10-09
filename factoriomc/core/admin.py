@@ -1,4 +1,4 @@
-from core.models import (ConsumptionStat, Event, Player, ProductionStat,
+from core.models import (ConsumptionStat, Event, Game, Player, ProductionStat,
                          ScenarioData, Server)
 from django.contrib import admin
 
@@ -8,3 +8,4 @@ admin.site.register(Player)
 admin.site.register(ProductionStat)
 admin.site.register(Server)
 admin.site.register(ScenarioData)
+admin.site.register(Game)
