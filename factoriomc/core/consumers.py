@@ -1,4 +1,4 @@
-from channels import Group, Channel
+from channels import Group
 from channels.auth import channel_session_user, channel_session_user_from_http
 from channels.sessions import channel_session
 
@@ -30,7 +30,7 @@ PACK_NO_AUTH = {  # Sending packages without being authed
     }
 }
 
-PACK_NO_SERVER = {  # Connected to a websocket server endpoint that doesn't exist
+PACK_NO_SERVER = {  # Server not found package
     "namespace": "global",
     "data": {
         "success": False,
@@ -110,7 +110,8 @@ def server_message(message, pk=None):
             if int(msg['data']) < 0:
                 raise ValueError
         except ValueError:
-                message.reply_channel.send(fail_pack(namespace, "Data has to be an int bigger than 0"))
+                message.reply_channel.send(
+                    fail_pack(namespace, "Data has to be an int > than 0"))
                 return
 
         try:
@@ -122,7 +123,8 @@ def server_message(message, pk=None):
             )
             message.reply_channel.send(ok_pack(namespace))
         except:
-            message.reply_channel.send(fail_pack(namespace, "Unknown error occured"))
+            message.reply_channel.send(
+                fail_pack(namespace, "Unknown error occured"))
             raise
         return
 
@@ -131,7 +133,8 @@ def server_message(message, pk=None):
             if int(msg['data']) < 0:
                 raise ValueError
         except ValueError:
-                message.reply_channel.send(fail_pack(namespace, "Data has to be an int bigger than 0"))
+                message.reply_channel.send(
+                    fail_pack(namespace, "Data has to be an int > than 0"))
                 return
 
         try:
@@ -143,7 +146,8 @@ def server_message(message, pk=None):
             )
             message.reply_channel.send(ok_pack(namespace))
         except:
-            message.reply_channel.send(fail_pack(namespace, "Unknown error occured"))
+            message.reply_channel.send(
+                fail_pack(namespace, "Unknown error occured"))
             raise
         return
 
@@ -172,7 +176,8 @@ def server_message(message, pk=None):
                 )
                 message.reply_channel.send(ok_pack(namespace))
         except:
-            message.reply_channel.send(fail_pack(namespace, "Unknown error occured"))
+            message.reply_channel.send(
+                fail_pack(namespace, "Unknown error occured"))
 
         return
 

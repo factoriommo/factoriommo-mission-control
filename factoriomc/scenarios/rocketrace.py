@@ -30,10 +30,13 @@ def update_stats():
     for server in servers:
         data_list[server.pk] = {'players-online': str(server.players_online)}
 
-        for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack', 'rocket-progress']:
+        for key in PACK_DICT:
             try:
-                data_list[server.pk][key] = ConsumptionStat.objects.filter(server=server.id) \
-                    .filter(key=key).filter(game=active_game).order_by('-id')[0].value
+                data_list[server.pk][key] = ConsumptionStat.objects \
+                    .filter(server=server.id) \
+                    .filter(key=key) \
+                    .filter(game=active_game) \
+                    .order_by('-id')[0].value
             except IndexError:
                 data_list[server.pk][key] = 0
 
@@ -41,18 +44,20 @@ def update_stats():
     for server in servers:
         server.message(pack)
 
-    winner = None
-
     lead_table = {}
     # Update lead tables
-    for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack', 'rocket-progress']:
+    for key in PACK_DICT:
         try:
-            lead_table[key] = ScenarioData.objects.get(key='leader-%s' % key, game=active_game)
+            lead_table[key] = ScenarioData.objects.get(key='leader-%s' % key,
+                                                       game=active_game)
         except ScenarioData.DoesNotExist:
-            lead_table[key] = ScenarioData.objects.create(key='leader-%s' % key, value=0, game=active_game)
+            lead_table[key] = ScenarioData.objects.create(
+                key='leader-%s' % key,
+                value=0,
+                game=active_game)
 
     new_leaders = {}
-    for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack', 'rocket-progress']:
+    for key in PACK_DICT:
         # Find highest server for key
         highest = 0
         highest_server = None
@@ -65,7 +70,7 @@ def update_stats():
         if highest_server is not None:
             new_leaders[key] = highest_server
 
-    for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack', 'rocket-progress']:
+    for key in PACK_DICT:
         if key not in new_leaders:
             continue
 
@@ -75,18 +80,25 @@ def update_stats():
 
             for server in servers:
                 if server is new_leaders[key]:
-                    pack = {"namespace": "chat", "data":
-                            {"msg": "You have taken the lead in {:s}".format(PACK_DICT[key])}}
+                    pack = {
+                        "namespace": "chat",
+                        "data": {
+                            "msg": "You have taken the lead in {:s}"
+                            .format(PACK_DICT[key])}}
+
                     server.message(pack)
                 else:
-                    pack = {"namespace": "chat", "data":
-                            {"msg": "{:s} have taken the lead in {:s}".format(new_leaders[key].name, PACK_DICT[key])}}
+                    pack = {
+                        "namespace": "chat",
+                        "data": {
+                            "msg": "{:s} have taken the lead in {:s}"
+                            .format(new_leaders[key].name, PACK_DICT[key])}}
+
                     server.message(pack)
 
         lead_table[key].server = new_leaders[key]
         lead_table[key].value = data_list[new_leaders[key].pk][key]
         lead_table[key].save()
-
 
 
 def event_received(event):
@@ -96,18 +108,17 @@ def event_received(event):
         update_stats()
     elif event.event == event.EVENT_ROCKET_LAUNCHED:
         # See if we have a winner
+        servers = Server.objects.all()
         game = Game.objects.get(pk=settings.ACTIVE_GAME)
-
-        winner = event.server
 
         if not game.game_over:
             game.game_over = True
             game.save()
             for server in servers:
-                if server == winner:
+                if server == event.server:  # This is the winning server
                     server.message(PACK_WIN)
                 else:
-                    server.message(PACK_LOSE)
+                    server.message(PACK_LOSE)  # This is the losing server
 
 
 def consumptionstat_received(stat):
