@@ -1,5 +1,3 @@
-import copy
-
 from core.models import ConsumptionStat, ScenarioData, Server
 from django.conf import settings
 
@@ -19,11 +17,6 @@ PACK_DICT = {
     'science-pack-3': 'Blue science',
     'alien-science-pack': 'Alien science'
 }
-
-class Scenario(object):
-
-    def tick(self):
-        pass
 
 
 def update_stats():
