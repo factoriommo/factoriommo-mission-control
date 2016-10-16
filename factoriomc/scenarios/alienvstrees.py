@@ -1,5 +1,5 @@
 from core.models import ConsumptionStat, ScenarioData, Server, Game
-from django.conf import settings
+from constance import config
 
 
 PACK_WIN = {"namespace": "victory", "data": {"winner": True}}
@@ -33,7 +33,7 @@ def update_stats():
                 data_list[server.pk][key] = ConsumptionStat.objects \
                     .filter(server=server.id) \
                     .filter(key=key) \
-                    .filter(game=settings.ACTIVE_GAME) \
+                    .filter(game_id=config.ACTIVE_GAME) \
                     .order_by('-id')[0].value
             except IndexError:
                 data_list[server.pk][key] = 0
@@ -50,13 +50,13 @@ def update_stats():
         try:
             lead_table[key] = ScenarioData.objects.get(
                 key='leader-%s' % key,
-                game=settings.ACTIVE_GAME)
+                game_id=config.ACTIVE_GAME)
 
         except ScenarioData.DoesNotExist:
             lead_table[key] = ScenarioData.objects.create(
                 key='leader-%s' % key,
                 value=0,
-                game=settings.ACTIVE_GAME)
+                game_id=config.ACTIVE_GAME)
 
     new_leaders = {}
     for key in PACK_DICT:
@@ -110,7 +110,7 @@ def update_stats():
             winner = server
             break
 
-    game = Game.objects.get(pk=settings.ACTIVE_GAME)
+    game = Game.objects.get(pk=config.ACTIVE_GAME)
 
     if winner and not game.game_over:
         game.game_over = True

@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+from importlib import import_module
 
 from channels import Group
 from constance import config
@@ -60,12 +61,21 @@ class Game(models.Model):
     game_end = models.DateTimeField(blank=True, null=True)
     game_over = models.BooleanField()
 
+    class DoesNotExistException(Exception):
+        pass
+
     def __str__(self):
         return "Game <{:d}> {:s}".format(self.pk, self.name)
 
     @classmethod
     def get_active(cls):
         return cls.objects.get(id=config.ACTIVE_GAME)
+
+    def get_scenario(self):
+        try:
+            return import_module('scenarios.%s' % config.ACTIVE_SCENARIO)
+        except ImportError:
+            raise self.DoesNotExistException("Scenario does not exist")
 
     def finish(self):
         for p in Player.objects.all():
@@ -128,8 +138,8 @@ def event_post_save(sender, instance, created, **kwargs):
             p.save()
 
         # Send to scenario
-        scenario_module = __import__('%s.scenario' % config.ACTIVE_SCENARIO)
-        scenario_module.scenario.event_received(instance)
+        scenario = Game.get_active().get_scenario()
+        scenario.event_received(instance)
 
 
 class BaseStat(models.Model):
@@ -183,15 +193,17 @@ class ConsumptionStat(BaseStat):
 
 @receiver(post_save, sender=ProductionStat)
 def productionstat_postsave(sender, instance, created, **kwargs):
-    scenario_module = __import__('%s.scenario' % config.ACTIVE_SCENARIO)
-    scenario_module.scenario.productionstat_received(instance)
+    scenario = Game.get_active().get_scenario()
+    scenario.productionstat_received(instance)
+
     instance.broadcast(group='public')
 
 
 @receiver(post_save, sender=ConsumptionStat)
 def consumptionstat_postsave(sender, instance, created, **kwargs):
-    scenario_module = __import__('%s.scenario' % config.ACTIVE_SCENARIO)
-    scenario_module.scenario.consumptionstat_received(instance)
+    scenario = Game.get_active().get_scenario()
+    scenario.consumptionstat_received(instance)
+
     instance.broadcast(group='public')
 
 

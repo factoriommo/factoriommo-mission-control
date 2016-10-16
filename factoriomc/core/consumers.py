@@ -3,7 +3,7 @@ from channels.auth import channel_session_user, channel_session_user_from_http
 from channels.sessions import channel_session
 
 from core.models import ConsumptionStat, Event, ProductionStat, Server, Game
-from django.conf import settings
+from constance import config
 
 import json
 
@@ -119,7 +119,7 @@ def server_message(message, pk=None):
                 server=server,
                 key=msg['type'],
                 value=msg['data'],
-                game_id=settings.ACTIVE_GAME
+                game_id=config.ACTIVE_GAME
             )
             message.reply_channel.send(ok_pack(namespace))
         except:
@@ -142,7 +142,7 @@ def server_message(message, pk=None):
                 server=server,
                 key=msg['type'],
                 value=msg['data'],
-                game_id=settings.ACTIVE_GAME
+                game_id=config.ACTIVE_GAME
             )
             message.reply_channel.send(ok_pack(namespace))
         except:
@@ -156,7 +156,7 @@ def server_message(message, pk=None):
             server=server,
             event=msg['type'],
             data=json.dumps(msg['data']),
-            game_id=settings.ACTIVE_GAME
+            game_id=config.ACTIVE_GAME
         )
         message.reply_channel.send(ok_pack(namespace))
         return
@@ -172,7 +172,7 @@ def server_message(message, pk=None):
                     server=server,
                     key=msg['type'],
                     value=msg['data'],
-                    game_id=settings.ACTIVE_GAME
+                    game_id=config.ACTIVE_GAME
                 )
                 message.reply_channel.send(ok_pack(namespace))
         except:
@@ -253,4 +253,4 @@ def public_disconnected(message):
 
 @channel_session_user
 def public_message(message, pk=None):
-    print("Received some crap from a public ws: %s" % message.text)
+    print("Dropping package on public channel: %s" % message.text)

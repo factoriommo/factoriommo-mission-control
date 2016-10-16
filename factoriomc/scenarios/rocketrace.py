@@ -5,12 +5,6 @@ from django.conf import settings
 PACK_WIN = {"namespace": "victory", "data": {"winner": True}}
 PACK_LOSE = {"namespace": "victory", "data": {"winner": False}}
 
-TARGET_PACK_1 = 8000
-TARGET_PACK_2 = 8000
-TARGET_PACK_3 = 2000
-TARGET_PACK_4 = 250
-
-
 PACK_DICT = {
     'science-pack-1': 'Red science',
     'science-pack-2': 'Green science',
@@ -109,11 +103,11 @@ def event_received(event):
     elif event.event == event.EVENT_ROCKET_LAUNCHED:
         # See if we have a winner
         servers = Server.objects.all()
-        game = Game.objects.get(pk=settings.ACTIVE_GAME)
+        active_game = Game.get_active()
 
-        if not game.game_over:
-            game.game_over = True
-            game.save()
+        if not active_game.game_over:
+            active_game.game_over = True
+            active_game.save()
             for server in servers:
                 if server == event.server:  # This is the winning server
                     server.message(PACK_WIN)
