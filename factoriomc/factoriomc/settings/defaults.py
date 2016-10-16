@@ -13,7 +13,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 # Application definition
@@ -27,6 +28,7 @@ INSTALLED_APPS = (
 
     'redis_cache',
     'channels',
+    'constance',
 
     'account',
     'core',
@@ -105,4 +107,10 @@ CHANNEL_LAYERS = {
 }
 
 LOGIN_URL = '/admin/login/'
-SCENARIO = 'rocketrace'
+
+CONSTANCE_CONFIG = {
+    'ACTIVE_SCENARIO': ('', 'The current running scenario.'
+                        '(Leave blank for None)'),
+    # SCENARIO = 'rocketrace'
+    'ACTIVE_GAME': (1, 'The id of the currently active Core.Game object.'),
+}

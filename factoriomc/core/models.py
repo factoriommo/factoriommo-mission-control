@@ -3,7 +3,7 @@ import json
 import os
 
 from channels import Group
-from django.conf import settings
+from constance import config
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -62,7 +62,7 @@ class Game(models.Model):
 
     @classmethod
     def get_active(cls):
-        return cls.objects.get(id=settings.ACTIVE_GAME)
+        return cls.objects.get(id=config.ACTIVE_GAME)
 
     def finish(self):
         for p in Player.objects.all():
@@ -94,8 +94,11 @@ class Event(models.Model):
     game = models.ForeignKey(Game)
 
     def __str__(self):
-        return "[{:s}] <{:s}> {:s}".format(self.time.strftime('%d/%m %H:%M:%S'),
-                                           self.server.name, self.get_event_display())
+        return "[{:s}] <{:s}> {:s}".format(
+            self.time.strftime('%d/%m %H:%M:%S'),
+            self.server.name,
+            self.get_event_display()
+        )
 
 
 @receiver(post_save, sender=Event)
@@ -104,7 +107,9 @@ def event_post_save(sender, instance, created, **kwargs):
         # Update Player list
         if instance.event == instance.EVENT_PLAYER_JOINED:
             data = json.loads(instance.data)
-            p, created = Player.objects.get_or_create(ingame_name=data['playername'])
+            p, created = Player.objects.get_or_create(
+                ingame_name=data['playername'])
+
             p.on_server = instance.server
             p.last_seen = timezone.now()
             p.times_joined += 1
@@ -112,13 +117,15 @@ def event_post_save(sender, instance, created, **kwargs):
 
         elif instance.event == instance.EVENT_PLAYER_LEFT:
             data = json.loads(instance.data)
-            p, created = Player.objects.get_or_create(ingame_name=data['playername'])
+            p, created = Player.objects.get_or_create(
+                ingame_name=data['playername'])
+
             p.on_server = None
             p.last_seen = timezone.now()
             p.save()
 
         # Send to scenario
-        scenario_module = __import__('%s.scenario' % settings.SCENARIO)
+        scenario_module = __import__('%s.scenario' % config.ACTIVE_SCENARIO)
         scenario_module.scenario.event_received(instance)
 
 
@@ -135,8 +142,12 @@ class BaseStat(models.Model):
         abstract = True
 
     def __str__(self):
-        return "[{:s}] <{:s}> {:s}: {:d}".format(self.time.strftime('%d/%m %H:%M:%S'),
-                                                 self.server.name, self.key, self.value)
+        return "[{:s}] <{:s}> {:s}: {:d}".format(
+            self.time.strftime('%d/%m %H:%M:%S'),
+            self.server.name,
+            self.key,
+            self.value
+        )
 
     def broadcast(self, group=None, request=None):
         """Broadcast this stat over websocket.
@@ -169,14 +180,14 @@ class ConsumptionStat(BaseStat):
 
 @receiver(post_save, sender=ProductionStat)
 def productionstat_postsave(sender, instance, created, **kwargs):
-    scenario_module = __import__('%s.scenario' % settings.SCENARIO)
+    scenario_module = __import__('%s.scenario' % config.ACTIVE_SCENARIO)
     scenario_module.scenario.productionstat_received(instance)
     instance.broadcast(group='public')
 
 
 @receiver(post_save, sender=ConsumptionStat)
 def consumptionstat_postsave(sender, instance, created, **kwargs):
-    scenario_module = __import__('%s.scenario' % settings.SCENARIO)
+    scenario_module = __import__('%s.scenario' % config.ACTIVE_SCENARIO)
     scenario_module.scenario.consumptionstat_received(instance)
     instance.broadcast(group='public')
 
@@ -190,7 +201,13 @@ class ScenarioData(models.Model):
 
     def __str__(self):
         try:
-            return "<{:s}> {:s} : {:s}".format(self.server.name, self.key, self.value)
+            return "<{:s}> {:s} : {:s}".format(
+                self.server.name,
+                self.key,
+                self.value
+            )
         except AttributeError:
-            return "<none> {:s} : {:s}".format(self.key, self.value)
-
+            return "<none> {:s} : {:s}".format(
+                self.key,
+                self.value
+            )
