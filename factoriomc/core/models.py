@@ -60,6 +60,9 @@ class Game(models.Model):
     game_end = models.DateTimeField(blank=True, null=True)
     game_over = models.BooleanField()
 
+    def __str__(self):
+        return "Game <{:d}> {:s}".format(self.pk, self.name)
+
     @classmethod
     def get_active(cls):
         return cls.objects.get(id=config.ACTIVE_GAME)
