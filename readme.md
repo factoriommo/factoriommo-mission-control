@@ -7,7 +7,7 @@ It contains a Django website wich collects data from the [Agent](https://github.
 Getting started
 ---------------
 
-You need reddis (for django-channels) and a database backend.
+You need [redis](http://redis.io/) (for [django-channels](https://channels.readthedocs.io/en/stable/)) and a database backend.
 
 ```
 virtualenv ~/your-virtualenv-dir/factoriomc
@@ -46,3 +46,5 @@ Now you can start debugging your scenario.
 You can simulate a server on `/serverdebug/<ID>/`. So if you made two servers, open two tabs and navigate to `/serverdebug/1/` and `/serverdebug/2/`.
 
 Here you can press the auth button to authenticate. You can also send some test data. If you open de debugger in chrome, you will get a lot of feedback.
+
+Once you're live, you can goto `/missioncontrol/` to send messages to both servers, view the online players and send rcon commands to all servers at once.
