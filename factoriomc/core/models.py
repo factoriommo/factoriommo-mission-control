@@ -1,13 +1,15 @@
 import hashlib
 import json
 import os
+from importlib import import_module
 
 from channels import Group
-from django.conf import settings
+from constance import config
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+from core.packs import PACK_LOSE, PACK_WIN
 
 
 class Server(models.Model):
@@ -55,16 +57,54 @@ class Player(models.Model):
 
 
 class Game(models.Model):
+    SCENARIO_CONSUMPTION_CHALLENGE = 'consumption'
+    SCENARIO_PRODUCTION_CHALLENGE = 'production'
+    SCENARIO_ROCKETRACE = 'rocket'
+
+    SCENARIO_CHOICES = (
+        (SCENARIO_CONSUMPTION_CHALLENGE, 'Consumption Challenge'),
+        (SCENARIO_PRODUCTION_CHALLENGE, 'Production Challenge'),
+        (SCENARIO_ROCKETRACE, 'Rocket Race'),
+    )
+
     name = models.CharField(max_length=255)
     game_start = models.DateTimeField()
     game_end = models.DateTimeField(blank=True, null=True)
     game_over = models.BooleanField()
+    scenario = models.CharField(max_length=32,
+                                choices=SCENARIO_CHOICES,
+                                default=SCENARIO_ROCKETRACE)
+
+    scenario_data = models.TextField(
+        blank=True, null=True,
+        help_text="(Optional) JSON blob to configure scenario")
+
+    class DoesNotExistException(Exception):
+        pass
+
+    def __str__(self):
+        return "Game <{:d}> {:s}".format(self.pk, self.name)
 
     @classmethod
     def get_active(cls):
-        return cls.objects.get(id=settings.ACTIVE_GAME)
+        return cls.objects.get(id=config.ACTIVE_GAME)
 
-    def finish(self):
+    def get_scenario(self):
+        try:
+            return import_module('scenarios.%s' % self.scenario)
+        except ImportError:
+            raise self.DoesNotExistException("Scenario does not exist")
+
+    def finish(self, winner):
+        """Finalize this game and notify the servers.
+
+        Args:
+            winner: A server object
+        """
+
+        if self.game_over:
+            return False
+
         for p in Player.objects.all():
             p.on_server = None
             p.save()
@@ -72,8 +112,32 @@ class Game(models.Model):
         for s in Server.objects.all():
             s.players_online = 0
             s.save()
+
         self.game_end = timezone.now()
+        self.game_over = True
         self.save()
+
+        for server in Server.objects.all():
+            if server == winner:
+                server.message(PACK_WIN)
+            else:
+                server.message(PACK_LOSE)
+
+        return True
+
+    def broadcast(self, namespace, data):
+        """Send a message to all our servers
+
+        Args:
+            namespace: A string describing a namespace.
+            data: The data you want to send.
+        """
+        pack = {'namespace': namespace, 'data': data}
+        for server in Server.objects.all():
+            server.message(pack)
+
+    def get_scenario_data(self):
+        return json.loads(self.scenario_data)
 
 
 class Event(models.Model):
@@ -94,8 +158,11 @@ class Event(models.Model):
     game = models.ForeignKey(Game)
 
     def __str__(self):
-        return "[{:s}] <{:s}> {:s}".format(self.time.strftime('%d/%m %H:%M:%S'),
-                                           self.server.name, self.get_event_display())
+        return "[{:s}] <{:s}> {:s}".format(
+            self.time.strftime('%d/%m %H:%M:%S'),
+            self.server.name,
+            self.get_event_display()
+        )
 
 
 @receiver(post_save, sender=Event)
@@ -104,7 +171,9 @@ def event_post_save(sender, instance, created, **kwargs):
         # Update Player list
         if instance.event == instance.EVENT_PLAYER_JOINED:
             data = json.loads(instance.data)
-            p, created = Player.objects.get_or_create(ingame_name=data['playername'])
+            p, created = Player.objects.get_or_create(
+                ingame_name=data['playername'])
+
             p.on_server = instance.server
             p.last_seen = timezone.now()
             p.times_joined += 1
@@ -112,14 +181,16 @@ def event_post_save(sender, instance, created, **kwargs):
 
         elif instance.event == instance.EVENT_PLAYER_LEFT:
             data = json.loads(instance.data)
-            p, created = Player.objects.get_or_create(ingame_name=data['playername'])
+            p, created = Player.objects.get_or_create(
+                ingame_name=data['playername'])
+
             p.on_server = None
             p.last_seen = timezone.now()
             p.save()
 
         # Send to scenario
-        scenario_module = __import__('%s.scenario' % settings.SCENARIO)
-        scenario_module.scenario.event_received(instance)
+        scenario = Game.get_active().get_scenario()
+        scenario.event_received(instance)
 
 
 class BaseStat(models.Model):
@@ -135,13 +206,19 @@ class BaseStat(models.Model):
         abstract = True
 
     def __str__(self):
-        return "[{:s}] <{:s}> {:s}: {:d}".format(self.time.strftime('%d/%m %H:%M:%S'),
-                                                 self.server.name, self.key, self.value)
+        return "[{:s}] <{:s}> {:s}: {:d}".format(
+            self.time.strftime('%d/%m %H:%M:%S'),
+            self.server.name,
+            self.key,
+            self.value
+        )
 
     def broadcast(self, group=None, request=None):
         """Broadcast this stat over websocket.
-            Group: the name of the channels group
-            Request: the original message (this uses message.reply_channel)
+
+        Args:
+            group: the name of the channels group
+            request: the original message (this uses message.reply_channel)
         """
         data = json.dumps({
             'namespace': self.ws_namespace,
@@ -169,15 +246,17 @@ class ConsumptionStat(BaseStat):
 
 @receiver(post_save, sender=ProductionStat)
 def productionstat_postsave(sender, instance, created, **kwargs):
-    scenario_module = __import__('%s.scenario' % settings.SCENARIO)
-    scenario_module.scenario.productionstat_received(instance)
+    scenario = Game.get_active().get_scenario()
+    scenario.productionstat_received(instance)
+
     instance.broadcast(group='public')
 
 
 @receiver(post_save, sender=ConsumptionStat)
 def consumptionstat_postsave(sender, instance, created, **kwargs):
-    scenario_module = __import__('%s.scenario' % settings.SCENARIO)
-    scenario_module.scenario.consumptionstat_received(instance)
+    scenario = Game.get_active().get_scenario()
+    scenario.consumptionstat_received(instance)
+
     instance.broadcast(group='public')
 
 
@@ -190,7 +269,13 @@ class ScenarioData(models.Model):
 
     def __str__(self):
         try:
-            return "<{:s}> {:s} : {:s}".format(self.server.name, self.key, self.value)
+            return "<{:s}> {:s} : {:s}".format(
+                self.server.name,
+                self.key,
+                self.value
+            )
         except AttributeError:
-            return "<none> {:s} : {:s}".format(self.key, self.value)
-
+            return "<none> {:s} : {:s}".format(
+                self.key,
+                self.value
+            )

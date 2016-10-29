@@ -14,8 +14,12 @@ from django.contrib.auth.decorators import user_passes_test
 
 
 urlpatterns = [
-    url(r'^missioncontrol/$', user_passes_test(lambda u: u.is_staff)(MissionControlView.as_view()), name='mission_control'),
-    url(r'^serverdebug/(?P<pk>[0-9]+)/$', user_passes_test(lambda u: u.is_superuser)(ServerDebugView.as_view()), name='serverdebug'),
+    url(r'^missioncontrol/$',
+        user_passes_test(lambda u: u.is_staff)(MissionControlView.as_view()),
+        name='mission_control'),
+    url(r'^serverdebug/(?P<pk>[0-9]+)/$',
+        user_passes_test(lambda u: u.is_superuser)(ServerDebugView.as_view()),
+        name='serverdebug'),
 
     url(r'^admin/', include(admin.site.urls)),
 

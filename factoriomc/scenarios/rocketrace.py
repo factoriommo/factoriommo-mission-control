@@ -1,4 +1,12 @@
-import copy
+"""
+
+
+THIS SCENARIO DOES NOT WORK
+
+It has not been updated to fit the new scenario runner
+
+"""
+
 
 from core.models import ConsumptionStat, ScenarioData, Server, Game
 from django.conf import settings
@@ -7,12 +15,6 @@ from django.conf import settings
 PACK_WIN = {"namespace": "victory", "data": {"winner": True}}
 PACK_LOSE = {"namespace": "victory", "data": {"winner": False}}
 
-TARGET_PACK_1 = 8000
-TARGET_PACK_2 = 8000
-TARGET_PACK_3 = 2000
-TARGET_PACK_4 = 250
-
-
 PACK_DICT = {
     'science-pack-1': 'Red science',
     'science-pack-2': 'Green science',
@@ -20,12 +22,6 @@ PACK_DICT = {
     'alien-science-pack': 'Alien science',
     'rocket-progress': 'Rocket progress'
 }
-
-
-class Scenario(object):
-
-    def tick(self):
-        pass
 
 
 def update_stats():
@@ -38,10 +34,13 @@ def update_stats():
     for server in servers:
         data_list[server.pk] = {'players-online': str(server.players_online)}
 
-        for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack', 'rocket-progress']:
+        for key in PACK_DICT:
             try:
-                data_list[server.pk][key] = ConsumptionStat.objects.filter(server=server.id) \
-                    .filter(key=key).filter(game=active_game).order_by('-id')[0].value
+                data_list[server.pk][key] = ConsumptionStat.objects \
+                    .filter(server=server.id) \
+                    .filter(key=key) \
+                    .filter(game=active_game) \
+                    .order_by('-id')[0].value
             except IndexError:
                 data_list[server.pk][key] = 0
 
@@ -49,18 +48,20 @@ def update_stats():
     for server in servers:
         server.message(pack)
 
-    winner = None
-
     lead_table = {}
     # Update lead tables
-    for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack', 'rocket-progress']:
+    for key in PACK_DICT:
         try:
-            lead_table[key] = ScenarioData.objects.get(key='leader-%s' % key, game=active_game)
+            lead_table[key] = ScenarioData.objects.get(key='leader-%s' % key,
+                                                       game=active_game)
         except ScenarioData.DoesNotExist:
-            lead_table[key] = ScenarioData.objects.create(key='leader-%s' % key, value=0, game=active_game)
+            lead_table[key] = ScenarioData.objects.create(
+                key='leader-%s' % key,
+                value=0,
+                game=active_game)
 
     new_leaders = {}
-    for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack', 'rocket-progress']:
+    for key in PACK_DICT:
         # Find highest server for key
         highest = 0
         highest_server = None
@@ -73,7 +74,7 @@ def update_stats():
         if highest_server is not None:
             new_leaders[key] = highest_server
 
-    for key in ['science-pack-1', 'science-pack-2', 'science-pack-3', 'alien-science-pack', 'rocket-progress']:
+    for key in PACK_DICT:
         if key not in new_leaders:
             continue
 
@@ -83,18 +84,25 @@ def update_stats():
 
             for server in servers:
                 if server is new_leaders[key]:
-                    pack = {"namespace": "chat", "data":
-                            {"msg": "You have taken the lead in {:s}".format(PACK_DICT[key])}}
+                    pack = {
+                        "namespace": "chat",
+                        "data": {
+                            "msg": "You have taken the lead in {:s}"
+                            .format(PACK_DICT[key])}}
+
                     server.message(pack)
                 else:
-                    pack = {"namespace": "chat", "data":
-                            {"msg": "{:s} have taken the lead in {:s}".format(new_leaders[key].name, PACK_DICT[key])}}
+                    pack = {
+                        "namespace": "chat",
+                        "data": {
+                            "msg": "{:s} have taken the lead in {:s}"
+                            .format(new_leaders[key].name, PACK_DICT[key])}}
+
                     server.message(pack)
 
         lead_table[key].server = new_leaders[key]
         lead_table[key].value = data_list[new_leaders[key].pk][key]
         lead_table[key].save()
-
 
 
 def event_received(event):
@@ -104,18 +112,17 @@ def event_received(event):
         update_stats()
     elif event.event == event.EVENT_ROCKET_LAUNCHED:
         # See if we have a winner
-        game = Game.objects.get(pk=settings.ACTIVE_GAME)
+        servers = Server.objects.all()
+        active_game = Game.get_active()
 
-        winner = event.server
-
-        if not game.game_over:
-            game.game_over = True
-            game.save()
+        if not active_game.game_over:
+            active_game.game_over = True
+            active_game.save()
             for server in servers:
-                if server == winner:
+                if server == event.server:  # This is the winning server
                     server.message(PACK_WIN)
                 else:
-                    server.message(PACK_LOSE)
+                    server.message(PACK_LOSE)  # This is the losing server
 
 
 def consumptionstat_received(stat):
