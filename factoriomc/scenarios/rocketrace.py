@@ -1,3 +1,13 @@
+"""
+
+
+THIS SCENARIO DOES NOT WORK
+
+It has not been updated to fit the new scenario runner
+
+"""
+
+
 from core.models import ConsumptionStat, ScenarioData, Server, Game
 from django.conf import settings
 

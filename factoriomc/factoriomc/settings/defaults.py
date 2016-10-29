@@ -109,8 +109,5 @@ CHANNEL_LAYERS = {
 LOGIN_URL = '/admin/login/'
 
 CONSTANCE_CONFIG = {
-    'ACTIVE_SCENARIO': ('', 'The current running scenario.'
-                        '(Leave blank for None)'),
-    # SCENARIO = 'rocketrace'
     'ACTIVE_GAME': (1, 'The id of the currently active Core.Game object.'),
 }
