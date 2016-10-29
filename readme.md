@@ -1,6 +1,6 @@
 Factio MMO Mission Control
 --------------------------
-This is the website running on factoriommo.org
+This is the website running on factoriommo.org and the control center for a collection of [factorio](https://www.factorio.com/) servers.
 
 It contains a Django website wich collects data from the [Agent](https://github.com/factoriommo/factoriommo-agent)(s) with websockets. It has support for scenario's that can do something with the collected data and send messages, stats and winconditions.
 
@@ -22,10 +22,10 @@ cd -
 ./manage.py createsuperuser
 ./manage.py runserver
 ```
+[How to setup your Django database](https://docs.djangoproject.com/en/1.10/intro/tutorial02/)
 
 Now navigate to `http://localhost:8000`, you should see the factoriommo website.
 
-[How to setup your Django database](https://docs.djangoproject.com/en/1.10/intro/tutorial02/)
 
 Now you can navigate to `/admin/` and set some stuff up.
 
@@ -39,7 +39,7 @@ The current Game is a constance that can be managed with Constance at `/admin/co
 
 Now you can go to `/admin/core/server/` and add one or two servers.
 
-`name` can be anything, `player_limit` is currently ignored, `players_online` gets auto-updated, you can set it to 0 for now `auth_token` gets auto-generated.
+`name` can be anything, `player_limit` is currently ignored, `players_online` gets auto-updated, you can set it to 0 for now, `auth_token` gets auto-generated.
 
 Now you can start debugging your scenario.
 
